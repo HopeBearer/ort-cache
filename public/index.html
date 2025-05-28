@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ort-cache Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .panel {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    input {
+      padding: 8px;
+      margin-right: 10px;
+      width: 150px;
+    }
+    .result {
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+      min-height: 20px;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #ddd;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    .tab.active {
+      border: 1px solid #ddd;
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      background-color: white;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>ort-cache Demo</h1>
+  
+  <div class="tabs">
+    <div class="tab active" data-tab="cache">Cache</div>
+    <div class="tab" data-tab="persistent">Persistent</div>
+    <div class="tab" data-tab="cookie">Cookie</div>
+    <div class="tab" data-tab="advanced">Advanced</div>
+  </div>
+
+  <div class="tab-content active" id="cache-tab">
+    <div class="panel">
+      <h2>Temporary Cache</h2>
+      <div>
+        <input type="text" id="cacheKey" placeholder="Key">
+        <input type="text" id="cacheValue" placeholder="Value">
+        <input type="number" id="cacheTime" placeholder="Time" value="1">
+        <select id="cacheUnit">
+          <option value="mm">Minutes</option>
+          <option value="ss">Seconds</option>
+        </select>
+      </div>
+      <div class="button-group">
+        <button id="setCache">Set Cache</button>
+        <button id="getCache">Get Cache</button>
+        <button id="delCache">Delete Cache</button>
+        <button id="comCache">Compute Time Left</button>
+      </div>
+      <div class="result" id="cacheResult"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="persistent-tab">
+    <div class="panel">
+      <h2>Persistent Storage</h2>
+      <div>
+        <input type="text" id="persistentKey" placeholder="Key">
+        <input type="text" id="persistentValue" placeholder="Value">
+      </div>
+      <div class="button-group">
+        <button id="setPersistent">Set Persistent</button>
+        <button id="getPersistent">Get Persistent</button>
+        <button id="clearCache">Clear All Cache</button>
+      </div>
+      <div class="result" id="persistentResult"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="cookie-tab">
+    <div class="panel">
+      <h2>Cookie Storage</h2>
+      <div>
+        <input type="text" id="cookieKey" placeholder="Key">
+        <input type="text" id="cookieValue" placeholder="Value">
+        <input type="number" id="cookieDays" placeholder="Days" value="7">
+      </div>
+      <div class="button-group">
+        <button id="setCookie">Set Cookie</button>
+        <button id="getCookie">Get Cookie</button>
+        <button id="clearCookie">Clear Cookie</button>
+      </div>
+      <div class="result" id="cookieResult"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="advanced-tab">
+    <div class="panel">
+      <h2>Advanced Storage</h2>
+      <div>
+        <input type="text" id="advancedKey" placeholder="Key">
+        <input type="text" id="advancedValue" placeholder="Value">
+        <select id="storageType">
+          <option value="local">Local Storage</option>
+          <option value="session">Session Storage</option>
+          <option value="memory">Memory Storage</option>
+        </select>
+      </div>
+      <div class="button-group">
+        <button id="setObject">Set Object</button>
+        <button id="getObject">Get Object</button>
+        <button id="getAllKeys">Get All Keys</button>
+        <button id="getUsage">Get Usage</button>
+      </div>
+      <div class="result" id="advancedResult"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { 
+      setCache, getCache, delCache, setCacheLoca, getCacheLoca, clearCache, 
+      comCache, setCookie, getCookie, clearCookie,
+      local, session, memStorage, setObject, getObject, getAllKeys, getStorageUsage
+    } from '/ort-cache.es.js';
+
+    // 选项卡切换
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+      });
+    });
+
+    // 缓存操作
+    document.getElementById('setCache').addEventListener('click', () => {
+      const key = document.getElementById('cacheKey').value;
+      const value = document.getElementById('cacheValue').value;
+      const time = parseInt(document.getElementById('cacheTime').value, 10);
+      const unit = document.getElementById('cacheUnit').value;
+      
+      const result = setCache(key, value, time, unit);
+      document.getElementById('cacheResult').textContent = result ? 
+        `缓存已设置: ${key} = ${value}, 过期时间 ${time} ${unit === 'mm' ? '分钟' : '秒'}` : 
+        '设置缓存失败';
+    });
+
+    document.getElementById('getCache').addEventListener('click', () => {
+      const key = document.getElementById('cacheKey').value;
+      const value = getCache(key);
+      document.getElementById('cacheResult').textContent = value !== null ? 
+        `获取的值: ${JSON.stringify(value)}` : 
+        '缓存不存在或已过期';
+    });
+
+    document.getElementById('delCache').addEventListener('click', () => {
+      const key = document.getElementById('cacheKey').value;
+      delCache(key);
+      document.getElementById('cacheResult').textContent = `缓存 ${key} 已删除`;
+    });
+
+    document.getElementById('comCache').addEventListener('click', () => {
+      const key = document.getElementById('cacheKey').value;
+      const timeLeft = comCache(key);
+      document.getElementById('cacheResult').textContent = timeLeft > 0 ? 
+        `剩余时间: ${timeLeft} 秒` : 
+        '缓存已过期或不存在';
+    });
+
+    // 持久化存储
+    document.getElementById('setPersistent').addEventListener('click', () => {
+      const key = document.getElementById('persistentKey').value;
+      const value = document.getElementById('persistentValue').value;
+      
+      const result = setCacheLoca(key, value);
+      document.getElementById('persistentResult').textContent = result ? 
+        `持久值已设置: ${key} = ${value}` : 
+        '设置持久值失败';
+    });
+
+    document.getElementById('getPersistent').addEventListener('click', () => {
+      const key = document.getElementById('persistentKey').value;
+      const value = getCacheLoca(key);
+      document.getElementById('persistentResult').textContent = value !== null ? 
+        `获取的值: ${JSON.stringify(value)}` : 
+        '值不存在';
+    });
+
+    document.getElementById('clearCache').addEventListener('click', () => {
+      clearCache();
+      document.getElementById('persistentResult').textContent = '所有缓存已清除';
+    });
+
+    // Cookie 操作
+    document.getElementById('setCookie').addEventListener('click', () => {
+      const key = document.getElementById('cookieKey').value;
+      const value = document.getElementById('cookieValue').value;
+      const days = parseInt(document.getElementById('cookieDays').value, 10);
+      
+      setCookie(key, value, days);
+      document.getElementById('cookieResult').textContent = 
+        `Cookie已设置: ${key} = ${value}, 过期时间 ${days} 天`;
+    });
+
+    document.getElementById('getCookie').addEventListener('click', () => {
+      const key = document.getElementById('cookieKey').value;
+      const value = getCookie(key);
+      document.getElementById('cookieResult').textContent = value ? 
+        `获取的Cookie: ${value}` : 
+        'Cookie不存在';
+    });
+
+    document.getElementById('clearCookie').addEventListener('click', () => {
+      const key = document.getElementById('cookieKey').value;
+      clearCookie(key);
+      document.getElementById('cookieResult').textContent = `Cookie ${key} 已清除`;
+    });
+
+    // 高级存储操作
+    document.getElementById('setObject').addEventListener('click', () => {
+      const key = document.getElementById('advancedKey').value;
+      const value = document.getElementById('advancedValue').value;
+      const storageType = document.getElementById('storageType').value;
+      
+      let storage;
+      switch(storageType) {
+        case 'local': storage = local; break;
+        case 'session': storage = session; break;
+        case 'memory': storage = memStorage; break;
+        default: storage = local;
+      }
+      
+      // 尝试将输入解析为JSON对象
+      let objValue;
+      try {
+        objValue = value.startsWith('{') ? JSON.parse(value) : value;
+      } catch (e) {
+        objValue = value; // 如果解析失败，使用原始字符串
+      }
+      
+      const result = setObject(storage, key, objValue);
+      document.getElementById('advancedResult').textContent = result ? 
+        `对象已存储: ${key}` : 
+        '存储对象失败';
+    });
+
+    document.getElementById('getObject').addEventListener('click', () => {
+      const key = document.getElementById('advancedKey').value;
+      const storageType = document.getElementById('storageType').value;
+      
+      let storage;
+      switch(storageType) {
+        case 'local': storage = local; break;
+        case 'session': storage = session; break;
+        case 'memory': storage = memStorage; break;
+        default: storage = local;
+      }
+      
+      const value = getObject(storage, key);
+      document.getElementById('advancedResult').textContent = value !== null ? 
+        `获取的对象: ${JSON.stringify(value)}` : 
+        '对象不存在';
+    });
+
+    document.getElementById('getAllKeys').addEventListener('click', () => {
+      const storageType = document.getElementById('storageType').value;
+      
+      let storage;
+      switch(storageType) {
+        case 'local': storage = local; break;
+        case 'session': storage = session; break;
+        case 'memory': storage = memStorage; break;
+        default: storage = local;
+      }
+      
+      const keys = getAllKeys(storage);
+      document.getElementById('advancedResult').textContent = 
+        `存储键: ${keys.join(', ')}`;
+    });
+
+    document.getElementById('getUsage').addEventListener('click', () => {
+      const storageType = document.getElementById('storageType').value;
+      
+      let storage;
+      switch(storageType) {
+        case 'local': storage = local; break;
+        case 'session': storage = session; break;
+        case 'memory': storage = memStorage; break;
+        default: storage = local;
+      }
+      
+      const usage = getStorageUsage(storage);
+      document.getElementById('advancedResult').textContent = 
+        `存储使用量: ${usage} 字节 (${(usage / 1024).toFixed(2)} KB)`;
+    });
+  </script>
+</body>
+</html> 

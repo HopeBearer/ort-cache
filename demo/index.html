@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ort-cache Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .panel {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    input {
+      padding: 8px;
+      margin-right: 10px;
+      width: 150px;
+    }
+    .result {
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+      min-height: 20px;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #ddd;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    .tab.active {
+      border: 1px solid #ddd;
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      background-color: white;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>ort-cache Demo</h1>
+  
+  <div class="tabs">
+    <div class="tab active" data-tab="cache">Cache</div>
+    <div class="tab" data-tab="persistent">Persistent</div>
+    <div class="tab" data-tab="cookie">Cookie</div>
+  </div>
+
+  <div class="tab-content active" id="cache-tab">
+    <div class="panel">
+      <h2>Temporary Cache</h2>
+      <div>
+        <input type="text" id="cacheKey" placeholder="Key">
+        <input type="text" id="cacheValue" placeholder="Value">
+        <input type="number" id="cacheTime" placeholder="Time" value="1">
+        <select id="cacheUnit">
+          <option value="mm">Minutes</option>
+          <option value="ss">Seconds</option>
+        </select>
+      </div>
+      <div class="button-group">
+        <button id="setCache">Set Cache</button>
+        <button id="getCache">Get Cache</button>
+        <button id="delCache">Delete Cache</button>
+        <button id="comCache">Compute Time Left</button>
+      </div>
+      <div class="result" id="cacheResult"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="persistent-tab">
+    <div class="panel">
+      <h2>Persistent Storage</h2>
+      <div>
+        <input type="text" id="persistentKey" placeholder="Key">
+        <input type="text" id="persistentValue" placeholder="Value">
+      </div>
+      <div class="button-group">
+        <button id="setPersistent">Set Persistent</button>
+        <button id="getPersistent">Get Persistent</button>
+        <button id="clearCache">Clear All Cache</button>
+      </div>
+      <div class="result" id="persistentResult"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="cookie-tab">
+    <div class="panel">
+      <h2>Cookie Storage</h2>
+      <div>
+        <input type="text" id="cookieKey" placeholder="Key">
+        <input type="text" id="cookieValue" placeholder="Value">
+        <input type="number" id="cookieDays" placeholder="Days" value="7">
+      </div>
+      <div class="button-group">
+        <button id="setCookie">Set Cookie</button>
+        <button id="getCookie">Get Cookie</button>
+        <button id="clearCookie">Clear Cookie</button>
+      </div>
+      <div class="result" id="cookieResult"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { 
+      setCache, getCache, delCache, setCacheLoca, getCacheLoca, clearCache, 
+      comCache, setCookie, getCookie, clearCookie 
+    } from '../dist/ort-cache.es.js';
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+      });
+    });
+
+    // Cache operations
+    document.getElementById('setCache').addEventListener('click', () => {
+      const key = document.getElementById('cacheKey').value;
+      const value = document.getElementById('cacheValue').value;
+      const time = parseInt(document.getElementById('cacheTime').value, 10);
+      const unit = document.getElementById('cacheUnit').value;
+      
+      const result = setCache(key, value, time, unit);
+      document.getElementById('cacheResult').textContent = result ? 
+        `Cache set: ${key} = ${value}, expires in ${time} ${unit === 'mm' ? 'minutes' : 'seconds'}` : 
+        'Failed to set cache';
+    });
+
+    document.getElementById('getCache').addEventListener('click', () => {
+      const key = document.getElementById('cacheKey').value;
+      const value = getCache(key);
+      document.getElementById('cacheResult').textContent = value !== null ? 
+        `Retrieved value: ${JSON.stringify(value)}` : 
+        'Cache not found or expired';
+    });
+
+    document.getElementById('delCache').addEventListener('click', () => {
+      const key = document.getElementById('cacheKey').value;
+      delCache(key);
+      document.getElementById('cacheResult').textContent = `Cache ${key} deleted`;
+    });
+
+    document.getElementById('comCache').addEventListener('click', () => {
+      const key = document.getElementById('cacheKey').value;
+      const timeLeft = comCache(key);
+      document.getElementById('cacheResult').textContent = timeLeft > 0 ? 
+        `Time left: ${timeLeft} seconds` : 
+        'Cache expired or not found';
+    });
+
+    // Persistent storage
+    document.getElementById('setPersistent').addEventListener('click', () => {
+      const key = document.getElementById('persistentKey').value;
+      const value = document.getElementById('persistentValue').value;
+      
+      const result = setCacheLoca(key, value);
+      document.getElementById('persistentResult').textContent = result ? 
+        `Persistent value set: ${key} = ${value}` : 
+        'Failed to set persistent value';
+    });
+
+    document.getElementById('getPersistent').addEventListener('click', () => {
+      const key = document.getElementById('persistentKey').value;
+      const value = getCacheLoca(key);
+      document.getElementById('persistentResult').textContent = value !== null ? 
+        `Retrieved value: ${JSON.stringify(value)}` : 
+        'Value not found';
+    });
+
+    document.getElementById('clearCache').addEventListener('click', () => {
+      clearCache();
+      document.getElementById('persistentResult').textContent = 'All cache cleared';
+    });
+
+    // Cookie operations
+    document.getElementById('setCookie').addEventListener('click', () => {
+      const key = document.getElementById('cookieKey').value;
+      const value = document.getElementById('cookieValue').value;
+      const days = parseInt(document.getElementById('cookieDays').value, 10);
+      
+      setCookie(key, value, days);
+      document.getElementById('cookieResult').textContent = 
+        `Cookie set: ${key} = ${value}, expires in ${days} days`;
+    });
+
+    document.getElementById('getCookie').addEventListener('click', () => {
+      const key = document.getElementById('cookieKey').value;
+      const value = getCookie(key);
+      document.getElementById('cookieResult').textContent = value ? 
+        `Retrieved cookie: ${value}` : 
+        'Cookie not found';
+    });
+
+    document.getElementById('clearCookie').addEventListener('click', () => {
+      const key = document.getElementById('cookieKey').value;
+      clearCookie(key);
+      document.getElementById('cookieResult').textContent = `Cookie ${key} cleared`;
+    });
+  </script>
+</body>
+</html> 

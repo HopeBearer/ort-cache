@@ -38,7 +38,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/ort-cache.git"
+    "url": "https://github.com/HopeBearer/ort-cache.git"
   },
   "description": "A unified cache management library for browser and Node.js environments"
 }
